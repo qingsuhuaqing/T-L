@@ -7,7 +7,7 @@
 # ============================================================
 
 # 切换到项目目录 (WSL 路径)
-cd /mnt/e/timellm/Time-LLM
+cd /mnt/e/timellm-chuangxin/Time-LLM
 
 # 设置显存优化
 export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:64"
@@ -53,7 +53,7 @@ python run_main.py \
   --itr 1 \
   --dropout 0.1 \
   --llm_model QWEN \
-  --llm_model_path /mnt/e/timellm/Time-LLM/base_models/Qwen2.5-3B \
+  --llm_model_path /mnt/e/timellm-chuangxin/Time-LLM/base_models/Qwen2.5-3B \
   --load_in_4bit
 
 # ============================================================

@@ -595,7 +595,7 @@ python run_main.py --model TimeLLM --data ETTh1 --pred_len 96 --use_all_improvem
 
 **文档更新时间**: 2026-01-02
 **参考文献**: ICLR 2023-2025, NeurIPS 2024
-**作者**: Claude Code
+**作者**: Zhenda Wang
 
 Sources:
 - [Time-Series-Library (GitHub)](https://github.com/thuml/Time-Series-Library)
