@@ -100,6 +100,10 @@ parser.add_argument('--pct_start', type=float, default=0.2, help='pct_start')
 parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)
 parser.add_argument('--llm_layers', type=int, default=6)
 parser.add_argument('--percent', type=int, default=100)
+parser.add_argument('--save_steps', type=int, default=0,
+                    help='save checkpoint every N steps (0=disable)')
+parser.add_argument('--resume_from_checkpoint', type=str, default='',
+                    help='path to checkpoint directory or checkpoint.pt to resume')
 
 args = parser.parse_args()
 ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
@@ -176,7 +180,37 @@ for ii in range(args.itr):
     if args.use_amp:
         scaler = torch.cuda.amp.GradScaler()
 
-    for epoch in range(args.train_epochs):
+    # Optional resume
+    start_epoch = 0
+    global_step = 0
+    if args.resume_from_checkpoint:
+        ckpt_path = args.resume_from_checkpoint
+        if os.path.isdir(ckpt_path):
+            ckpt_file = os.path.join(ckpt_path, 'checkpoint.pt')
+            if not os.path.exists(ckpt_file):
+                ckpt_file = os.path.join(ckpt_path, 'checkpoint')
+        else:
+            ckpt_file = ckpt_path
+        if os.path.exists(ckpt_file):
+            accelerator.print(f"Loading checkpoint: {ckpt_file}")
+            ckpt = torch.load(ckpt_file, map_location='cpu')
+            model_to_load = accelerator.unwrap_model(model)
+            if isinstance(ckpt, dict) and 'model' in ckpt:
+                model_to_load.load_state_dict(ckpt['model'])
+                if 'optimizer' in ckpt and ckpt['optimizer'] is not None:
+                    model_optim.load_state_dict(ckpt['optimizer'])
+                if 'scheduler' in ckpt and ckpt['scheduler'] is not None:
+                    scheduler.load_state_dict(ckpt['scheduler'])
+                start_epoch = ckpt.get('epoch', 0)
+                global_step = ckpt.get('global_step', 0)
+            else:
+                # Backward-compat: only model state_dict
+                model_to_load.load_state_dict(ckpt)
+            accelerator.print(f"Resumed at epoch {start_epoch}, global_step {global_step}")
+        else:
+            accelerator.print(f"Checkpoint not found: {ckpt_file}")
+
+    for epoch in range(start_epoch, args.train_epochs):
         iter_count = 0
         train_loss = []
 
@@ -239,6 +273,21 @@ for ii in range(args.itr):
                 accelerator.backward(loss)
                 model_optim.step()
 
+            global_step += 1
+            if args.save_steps > 0 and global_step % args.save_steps == 0:
+                if accelerator.is_local_main_process:
+                    step_dir = os.path.join(path, f'checkpoint_step_{global_step}')
+                    os.makedirs(step_dir, exist_ok=True)
+                    ckpt_payload = {
+                        'model': accelerator.unwrap_model(model).state_dict(),
+                        'optimizer': model_optim.state_dict(),
+                        'scheduler': scheduler.state_dict(),
+                        'epoch': epoch,
+                        'global_step': global_step,
+                    }
+                    torch.save(ckpt_payload, os.path.join(step_dir, 'checkpoint.pt'))
+                    accelerator.print(f"Saved step checkpoint: {step_dir}")
+
             if args.lradj == 'TST':
                 adjust_learning_rate(accelerator, model_optim, scheduler, epoch + 1, args, printout=False)
                 scheduler.step()
@@ -251,7 +300,7 @@ for ii in range(args.itr):
             "Epoch: {0} | Train Loss: {1:.7f} Vali Loss: {2:.7f} Test Loss: {3:.7f} MAE Loss: {4:.7f}".format(
                 epoch + 1, train_loss, vali_loss, test_loss, test_mae_loss))
 
-        early_stopping(vali_loss, model, path)
+        early_stopping(vali_loss, model, path, model_optim, scheduler, epoch + 1, global_step)
         if early_stopping.early_stop:
             accelerator.print("Early stopping")
             break

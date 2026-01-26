@@ -245,7 +245,8 @@ for ii in range(args.itr):
             "Epoch: {0} | Train Loss: {1:.7f} Vali Loss: {2:.7f} Test Loss: {3:.7f} MAE Loss: {4:.7f}".format(
                 epoch + 1, train_loss, vali_loss, test_loss, test_mae_loss))
 
-        early_stopping(vali_loss, model, path)
+        global_step = (epoch + 1) * train_steps
+        early_stopping(vali_loss, model, path, model_optim, scheduler, epoch + 1, global_step)
         if early_stopping.early_stop:
             accelerator.print("Early stopping")
             break

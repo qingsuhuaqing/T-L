@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -47,12 +48,12 @@ class EarlyStopping:
         self.delta = delta
         self.save_mode = save_mode
 
-    def __call__(self, val_loss, model, path):
+    def __call__(self, val_loss, model, path, optimizer=None, scheduler=None, epoch=None, global_step=None):
         score = -val_loss
         if self.best_score is None:
             self.best_score = score
             if self.save_mode:
-                self.save_checkpoint(val_loss, model, path)
+                self.save_checkpoint(val_loss, model, path, optimizer, scheduler, epoch, global_step)
         elif score < self.best_score + self.delta:
             self.counter += 1
             if self.accelerator is None:
@@ -64,10 +65,10 @@ class EarlyStopping:
         else:
             self.best_score = score
             if self.save_mode:
-                self.save_checkpoint(val_loss, model, path)
+                self.save_checkpoint(val_loss, model, path, optimizer, scheduler, epoch, global_step)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model, path):
+    def save_checkpoint(self, val_loss, model, path, optimizer=None, scheduler=None, epoch=None, global_step=None):
         if self.verbose:
             if self.accelerator is not None:
                 self.accelerator.print(
@@ -78,9 +79,15 @@ class EarlyStopping:
 
         if self.accelerator is not None:
             model = self.accelerator.unwrap_model(model)
-            torch.save(model.state_dict(), path + '/' + 'checkpoint')
-        else:
-            torch.save(model.state_dict(), path + '/' + 'checkpoint')
+
+        ckpt = {
+            'model': model.state_dict(),
+            'optimizer': optimizer.state_dict() if optimizer is not None else None,
+            'scheduler': scheduler.state_dict() if scheduler is not None else None,
+            'epoch': epoch if epoch is not None else 0,
+            'global_step': global_step if global_step is not None else 0,
+        }
+        torch.save(ckpt, os.path.join(path, 'checkpoint'))
         self.val_loss_min = val_loss
 
 

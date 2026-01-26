@@ -225,7 +225,8 @@ for ii in range(args.itr):
         accelerator.print(
             "Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-        early_stopping(vali_loss, model, path)  # model saving
+        global_step = (epoch + 1) * train_steps
+        early_stopping(vali_loss, model, path, model_optim, scheduler, epoch + 1, global_step)  # model saving
         if early_stopping.early_stop:
             accelerator.print("Early stopping")
             break
@@ -240,7 +241,10 @@ for ii in range(args.itr):
     unwrapped_model = accelerator.unwrap_model(model)
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
-    unwrapped_model.load_state_dict(torch.load(best_model_path, map_location=lambda storage, loc: storage))
+    ckpt = torch.load(best_model_path, map_location=lambda storage, loc: storage)
+    if isinstance(ckpt, dict) and 'model' in ckpt:
+        ckpt = ckpt['model']
+    unwrapped_model.load_state_dict(ckpt)
 
     x, _ = train_loader.dataset.last_insample_window()
     y = test_loader.dataset.timeseries
