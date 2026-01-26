@@ -11,10 +11,10 @@ base_models/**
 !base_models/**/.gitkeep
 
 # 排除数据集内容
-dataset/**
-!dataset/
-!dataset/**/
-!dataset/**/.gitkeep
+#dataset/**
+#!dataset/
+#!dataset/**/
+#!dataset/**/.gitkeep
 
 # Python 缓存
 __pycache__/
