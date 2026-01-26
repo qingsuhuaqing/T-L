@@ -25,11 +25,11 @@ RESUME_FROM=""
 
 # 训练参数（可按显存调整）
 LLM_DIM=4096
-LLM_LAYERS=20
-BATCH=6        # OOM 时降到 4
+LLM_LAYERS=16
+BATCH=2       # OOM 时降到 4
 D_MODEL=32
-D_FF=64        # OOM 时降到 32
-SEQ_LEN=512    # OOM 时可降到 384/256
+D_FF=32        # OOM 时降到 32
+SEQ_LEN=256    # OOM 时可降到 384/256
 PRED_LEN=96
 # ===================================
 
