@@ -19,6 +19,8 @@ LOG_DIR="${PROJECT_DIR}/logs"
 
 # 每 N step 保存一次（0=关闭）
 SAVE_STEPS=1000
+# 只保留最近 N 个 step checkpoint（0=关闭）
+SAVE_TOTAL_LIMIT=2
 
 # 断点续训（第一次留空）
 RESUME_FROM=""
@@ -74,6 +76,7 @@ python run_main.py \
   --load_in_4bit \
   --checkpoints "${CHECKPOINTS}" \
   --save_steps ${SAVE_STEPS} \
+  --save_total_limit ${SAVE_TOTAL_LIMIT} \
   --resume_from_checkpoint "${RESUME_FROM}" \
   2>&1 | tee -a "${LOG_FILE}"
 

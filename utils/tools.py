@@ -86,6 +86,8 @@ class EarlyStopping:
             'scheduler': scheduler.state_dict() if scheduler is not None else None,
             'epoch': epoch if epoch is not None else 0,
             'global_step': global_step if global_step is not None else 0,
+            'best_score': self.best_score,      # 新增：保存 best_score 用于断点续训
+            'val_loss_min': val_loss,           # 新增：保存 val_loss_min 用于断点续训
         }
         torch.save(ckpt, os.path.join(path, 'checkpoint'))
         self.val_loss_min = val_loss

@@ -13,6 +13,7 @@ import time
 import random
 import numpy as np
 import os
+import shutil
 
 os.environ['CURL_CA_BUNDLE'] = ''
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:64"
@@ -104,6 +105,8 @@ parser.add_argument('--save_steps', type=int, default=0,
                     help='save checkpoint every N steps (0=disable)')
 parser.add_argument('--resume_from_checkpoint', type=str, default='',
                     help='path to checkpoint directory or checkpoint.pt to resume')
+parser.add_argument('--save_total_limit', type=int, default=0,
+                    help='keep only the most recent N step checkpoints (0=disable)')
 
 args = parser.parse_args()
 ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
@@ -183,6 +186,7 @@ for ii in range(args.itr):
     # Optional resume
     start_epoch = 0
     global_step = 0
+    resume_step_in_epoch = 0
     if args.resume_from_checkpoint:
         ckpt_path = args.resume_from_checkpoint
         if os.path.isdir(ckpt_path):
@@ -207,6 +211,21 @@ for ii in range(args.itr):
                 # Backward-compat: only model state_dict
                 model_to_load.load_state_dict(ckpt)
             accelerator.print(f"Resumed at epoch {start_epoch}, global_step {global_step}")
+            # 新增：恢复 EarlyStopping 状态
+            if 'best_score' in ckpt and ckpt['best_score'] is not None:
+                early_stopping.best_score = ckpt['best_score']
+                early_stopping.val_loss_min = ckpt.get('val_loss_min', np.Inf)
+                accelerator.print(f"Restored EarlyStopping: best_score={early_stopping.best_score}, val_loss_min={early_stopping.val_loss_min}")
+            if train_steps > 0 and global_step > 0:
+                expected_epoch = global_step // train_steps
+                start_epoch = max(start_epoch, expected_epoch)
+                resume_step_in_epoch = global_step % train_steps
+                if start_epoch > expected_epoch:
+                    resume_step_in_epoch = 0
+                if resume_step_in_epoch > 0:
+                    accelerator.print(
+                        f"Will skip first {resume_step_in_epoch} batches in epoch {start_epoch} to resume."
+                    )
         else:
             accelerator.print(f"Checkpoint not found: {ckpt_file}")
 
@@ -216,7 +235,10 @@ for ii in range(args.itr):
 
         model.train()
         epoch_time = time.time()
+        resume_skip = resume_step_in_epoch if (epoch == start_epoch and resume_step_in_epoch > 0) else 0
         for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in tqdm(enumerate(train_loader)):
+            if resume_skip > 0 and i < resume_skip:
+                continue
             iter_count += 1
             model_optim.zero_grad()
 
@@ -284,9 +306,26 @@ for ii in range(args.itr):
                         'scheduler': scheduler.state_dict(),
                         'epoch': epoch,
                         'global_step': global_step,
+                        'best_score': early_stopping.best_score,      # 新增：保存 EarlyStopping 状态
+                        'val_loss_min': early_stopping.val_loss_min,  # 新增：保存 EarlyStopping 状态
                     }
                     torch.save(ckpt_payload, os.path.join(step_dir, 'checkpoint.pt'))
                     accelerator.print(f"Saved step checkpoint: {step_dir}")
+                    if args.save_total_limit and args.save_total_limit > 0:
+                        step_dirs = []
+                        for name in os.listdir(path):
+                            if name.startswith('checkpoint_step_'):
+                                full = os.path.join(path, name)
+                                if os.path.isdir(full):
+                                    try:
+                                        step = int(name.split('_')[-1])
+                                        step_dirs.append((step, full))
+                                    except ValueError:
+                                        continue
+                        step_dirs.sort()
+                        if len(step_dirs) > args.save_total_limit:
+                            for _, old_dir in step_dirs[:-args.save_total_limit]:
+                                shutil.rmtree(old_dir)
 
             if args.lradj == 'TST':
                 adjust_learning_rate(accelerator, model_optim, scheduler, epoch + 1, args, printout=False)

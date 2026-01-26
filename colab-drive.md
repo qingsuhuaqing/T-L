@@ -20,7 +20,7 @@
 ## 2. 项目结构要点（与你需求相关）
 
 - 训练入口：`run_main.py`
-- 早停保存与最优模型：`utils/tools.py`
+- 早停保存与最优模型（完整 checkpoint）：`utils/tools.py`
 - 步级保存 + 断点续训：`run_main.py`
 - Colab 脚本：`scripts/TimeLLM_ETTh1_llama3_colab_drive.sh`
 - Checkpoint 输出：`/content/drive/MyDrive/T-L/checkpoints/...`
@@ -33,16 +33,19 @@
 ### 3.1 `run_main.py`
 - 新增参数：
   - `--save_steps`：每 N step 保存一次
+  - `--save_total_limit`：只保留最近 N 个 step checkpoint
   - `--resume_from_checkpoint`：从指定路径恢复训练
 - 新增逻辑：
-  - 训练开始时加载完整 checkpoint（模型 + optimizer + scheduler + epoch + step）
-  - 训练中每 `save_steps` 保存一次完整 checkpoint
+- 训练开始时加载完整 checkpoint（模型 + optimizer + scheduler + epoch + step）
+- 训练中每 `save_steps` 保存一次完整 checkpoint
+- 超过 `save_total_limit` 时自动删除最老的 step checkpoint
+- 支持在 epoch 内恢复：会自动跳过已训练的 batch
 - 兼容旧 checkpoint（仅 `model.state_dict()`）加载
 
 ### 3.2 `utils/tools.py`
 - EarlyStopping 保存改为 **完整 dict**：
   - `model + optimizer + scheduler + epoch + global_step`
-- 文件名保持 `checkpoint` 不变，兼容原流程
+- 文件名保持 `checkpoint` 不变
 
 ### 3.3 兼容改动
 - `run_m4.py`：读取 `checkpoint` 时兼容 dict

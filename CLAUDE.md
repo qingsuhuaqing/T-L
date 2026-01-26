@@ -455,3 +455,8 @@ Time-LLM/
 **Last Updated / 最后更新**: 2026-01-11
 **Project Status / 项目状态**: Innovation implementation phase / 创新实现阶段
 **Hardware / 硬件**: NVIDIA GTX 1660 Ti (6GB) + Qwen 2.5 3B (4-bit)
+- 3. 训练完成后推理
+# 加载 checkpoint (不是 checkpoint_step_N)
+ckpt = torch.load('checkpoints/.../checkpoint')
+model.load_state_dict(ckpt['model'])
+model.eval()这个训练完成后推理,ckpt相关参数,在哪里体现的?
