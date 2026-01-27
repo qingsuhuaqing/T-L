@@ -18,7 +18,7 @@ CHECKPOINTS="${PROJECT_DIR}/checkpoints"
 LOG_DIR="${PROJECT_DIR}/logs"
 
 # 每 N step 保存一次（0=关闭）
-SAVE_STEPS=3000
+SAVE_STEPS=1000
 # 只保留最近 N 个 step checkpoint（0=关闭）
 SAVE_TOTAL_LIMIT=20
 
