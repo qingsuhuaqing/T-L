@@ -20,12 +20,12 @@ LOG_DIR="${PROJECT_DIR}/logs"
 # 每 N step 保存一次（0=关闭）
 SAVE_STEPS=3000
 # 只保留最近 N 个 step checkpoint（0=关闭）
-SAVE_TOTAL_LIMIT=3
+SAVE_TOTAL_LIMIT=2
 
 # 断点续训（第一次留空）
 # RESUME_FROM=""
 # 断点续训（第二次设置3000step）
-RESUME_FROM="/content/drive/MyDrive/T-L-GPT2/checkpoints/long_term_forecast_ETTh1_512_96_TimeLLM_ETTh1_ftM_sl512_ll48_pl96_dm64_nh8_el2_dl1_df128_fc3_ebtimeF_test_0-GPT2_ColabDrive_15GB/checkpoint_step_3000/checkpoint.pt"
+RESUME_FROM="/content/drive/MyDrive/T-L-GPT2/checkpoints/long_term_forecast_ETTh1_512_96_TimeLLM_ETTh1_ftM_sl512_ll48_pl96_dm64_nh8_el2_dl1_df128_fc3_ebtimeF_test_0-GPT2_ColabDrive_15GB/checkpoint_step_6000/checkpoint.pt"
 
 
 # ====== 训练参数（15GB 显存优先）======
@@ -41,7 +41,8 @@ SEQ_LEN=512
 LABEL_LEN=48
 PRED_LEN=96
 TRAIN_EPOCHS=30
-PATIENCE=2
+#适当保留验证集的严谨和容错
+PATIENCE=5
 # ===================================
 
 # ====== 断点续训可改/不可改说明 ======
