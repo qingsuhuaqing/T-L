@@ -197,7 +197,7 @@ for ii in range(args.itr):
             ckpt_file = ckpt_path
         if os.path.exists(ckpt_file):
             accelerator.print(f"Loading checkpoint: {ckpt_file}")
-            ckpt = torch.load(ckpt_file, map_location='cpu')
+            ckpt = torch.load(ckpt_file, map_location='cpu',weights_only=False)
             model_to_load = accelerator.unwrap_model(model)
             if isinstance(ckpt, dict) and 'model' in ckpt:
                 model_to_load.load_state_dict(ckpt['model'])
