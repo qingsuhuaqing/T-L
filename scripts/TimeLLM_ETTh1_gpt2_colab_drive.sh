@@ -20,10 +20,13 @@ LOG_DIR="${PROJECT_DIR}/logs"
 # 每 N step 保存一次（0=关闭）
 SAVE_STEPS=3000
 # 只保留最近 N 个 step checkpoint（0=关闭）
-SAVE_TOTAL_LIMIT=1
+SAVE_TOTAL_LIMIT=3
 
 # 断点续训（第一次留空）
-RESUME_FROM=""
+# RESUME_FROM=""
+# 断点续训（第二次设置3000step）
+RESUME_FROM="/content/drive/MyDrive/T-L-GPT2/checkpoints/long_term_forecast_ETTh1_512_96_TimeLLM_ETTh1_ftM_sl512_ll48_pl96_dm64_nh8_el2_dl1_df128_fc3_ebtimeF_test_0-GPT2_ColabDrive_15GB/checkpoint_step_3000/checkpoint.pt"
+
 
 # ====== 训练参数（15GB 显存优先）======
 # GPT-2 固定规格
