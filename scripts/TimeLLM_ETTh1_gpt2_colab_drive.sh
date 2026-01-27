@@ -9,7 +9,7 @@
 PROJECT_DIR="/content/drive/MyDrive/T-L-GPT2"
 
 # GPT-2 模型目录（相对路径保持一致）
-LLM_PATH="${PROJECT_DIR}/base_models/gpt2"
+LLM_PATH="${PROJECT_DIR}/base_models/openai-community/gpt2"
 
 # Checkpoint 保存到 Drive（断电不丢）
 CHECKPOINTS="${PROJECT_DIR}/checkpoints"
