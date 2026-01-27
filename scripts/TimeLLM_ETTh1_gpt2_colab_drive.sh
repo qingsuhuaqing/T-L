@@ -20,12 +20,16 @@ LOG_DIR="${PROJECT_DIR}/logs"
 # 每 N step 保存一次（0=关闭）
 SAVE_STEPS=3000
 # 只保留最近 N 个 step checkpoint（0=关闭）
-SAVE_TOTAL_LIMIT=2
+SAVE_TOTAL_LIMIT=20
 
 # 断点续训（第一次留空）
 # RESUME_FROM=""
 # 断点续训（第二次设置3000step）
+# （第三次设置6000step）
 RESUME_FROM="/content/drive/MyDrive/T-L-GPT2/checkpoints/long_term_forecast_ETTh1_512_96_TimeLLM_ETTh1_ftM_sl512_ll48_pl96_dm64_nh8_el2_dl1_df128_fc3_ebtimeF_test_0-GPT2_ColabDrive_15GB/checkpoint_step_6000/checkpoint.pt"
+# 仅首次恢复时手动覆盖 EarlyStopping 计数（-1=不用）
+# 示例：如果断点前已连续 3 次未提升，可设 RESUME_COUNTER=3
+RESUME_COUNTER=-1
 
 
 # ====== 训练参数（15GB 显存优先）======
@@ -42,7 +46,7 @@ LABEL_LEN=48
 PRED_LEN=96
 TRAIN_EPOCHS=30
 #适当保留验证集的严谨和容错
-PATIENCE=5
+PATIENCE=6
 # ===================================
 
 # ====== 断点续训可改/不可改说明 ======
@@ -103,6 +107,7 @@ python run_main.py \
   --save_steps ${SAVE_STEPS} \
   --save_total_limit ${SAVE_TOTAL_LIMIT} \
   --resume_from_checkpoint "${RESUME_FROM}" \
+  --resume_counter ${RESUME_COUNTER} \
   2>&1 | tee -a "${LOG_FILE}"
 
 # OOM 处理建议:

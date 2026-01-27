@@ -107,6 +107,8 @@ parser.add_argument('--resume_from_checkpoint', type=str, default='',
                     help='path to checkpoint directory or checkpoint.pt to resume')
 parser.add_argument('--save_total_limit', type=int, default=0,
                     help='keep only the most recent N step checkpoints (0=disable)')
+parser.add_argument('--resume_counter', type=int, default=-1,
+                    help='override early stopping counter on resume (-1=use checkpoint value)')
 
 args = parser.parse_args()
 ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
@@ -215,7 +217,13 @@ for ii in range(args.itr):
             if 'best_score' in ckpt and ckpt['best_score'] is not None:
                 early_stopping.best_score = ckpt['best_score']
                 early_stopping.val_loss_min = ckpt.get('val_loss_min', np.Inf)
-                accelerator.print(f"Restored EarlyStopping: best_score={early_stopping.best_score}, val_loss_min={early_stopping.val_loss_min}")
+                early_stopping.counter = ckpt.get('counter', 0)
+                accelerator.print(
+                    f"Restored EarlyStopping: best_score={early_stopping.best_score}, val_loss_min={early_stopping.val_loss_min}, counter={early_stopping.counter}"
+                )
+            if args.resume_counter is not None and args.resume_counter >= 0:
+                early_stopping.counter = args.resume_counter
+                accelerator.print(f"Override EarlyStopping counter to {early_stopping.counter} via --resume_counter")
             if train_steps > 0 and global_step > 0:
                 expected_epoch = global_step // train_steps
                 start_epoch = max(start_epoch, expected_epoch)
@@ -308,6 +316,7 @@ for ii in range(args.itr):
                         'global_step': global_step,
                         'best_score': early_stopping.best_score,      # 新增：保存 EarlyStopping 状态
                         'val_loss_min': early_stopping.val_loss_min,  # 新增：保存 EarlyStopping 状态
+                        'counter': early_stopping.counter,           # 新增：保存 EarlyStopping 计数器
                     }
                     torch.save(ckpt_payload, os.path.join(step_dir, 'checkpoint.pt'))
                     accelerator.print(f"Saved step checkpoint: {step_dir}")
