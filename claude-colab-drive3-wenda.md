@@ -390,7 +390,7 @@
 
 6.
   train_steps = len(train_loader) 这个  train_steps = len(train_loader) 是为了断点重新运行保存的吗?是在一开始第一次断点保存之前就计算处理了吗?第一轮epoch中的step中断,会受到该参数的计算影响吗??而且感觉每个checkpoint_step_n中保
-存的都是1000(命令脚本sh中设定)的倍数,即使 train_steps也都没有单独显示.岂不是说设置到epoch之间,会进行checkpoint的计算验证.但考虑到train_steps基本不会是1000的倍数,则基本不涉及checkpoint和checkpoint_step_n的保存冲突,请逐条详细回答
+存的都是1000(命令脚本sh中设定)的倍数,即使 train_steps也都没有单独显示.岂不是说设置到epoch之间,会进行checkpoint的计算验证.但考虑到train_steps基本不会是1000的倍数,则基本不涉及checkpoint和checkpoint_step_n的保存冲突..如果train_steps是1000的倍数,则是不是就会涉及checkpoint和checkpoint_step_n的保存冲突.请逐条详细回答
 
 
 
