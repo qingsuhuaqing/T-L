@@ -27,7 +27,8 @@ SAVE_TOTAL_LIMIT=20
 # 断点续训（第二次设置3000step）
 # （第三次设置6000step）
 # （第四次设置9000step）
-RESUME_FROM="/content/drive/MyDrive/T-L-GPT2/checkpoints/long_term_forecast_ETTh1_512_96_TimeLLM_ETTh1_ftM_sl512_ll48_pl96_dm64_nh8_el2_dl1_df128_fc3_ebtimeF_test_0-GPT2_ColabDrive_15GB/checkpoint_step_9000/checkpoint.pt"
+# （第五次设置11000step）
+RESUME_FROM="/content/drive/MyDrive/T-L-GPT2/checkpoints/long_term_forecast_ETTh1_512_96_TimeLLM_ETTh1_ftM_sl512_ll48_pl96_dm64_nh8_el2_dl1_df128_fc3_ebtimeF_test_0-GPT2_ColabDrive_15GB/checkpoint_step_11000/checkpoint.pt"
 # 仅首次恢复时手动覆盖 EarlyStopping 计数（-1=不用）
 # 示例：如果断点前已连续 3 次未提升，可设 RESUME_COUNTER=3
 RESUME_COUNTER=-1
